@@ -12,7 +12,7 @@ source /usr/share/yunohost/helpers
 # BACKUP THE APP MAIN DIR
 #=================================================
 
-ynh_script_progression "Backing up $app's files..."
+ynh_print_info "Declaring files to be backed up..."
 
 ynh_backup "$install_dir"
 ynh_backup "$data_dir"
@@ -26,8 +26,3 @@ ynh_backup "/etc/systemd/system/$app.service"
 ynh_backup "/etc/systemd/system/$app-novnc.service"
 ynh_backup "/etc/logrotate.d/$app"
 
-#=================================================
-# END OF SCRIPT
-#=================================================
-
-ynh_script_progression "Backup of $app completed"
