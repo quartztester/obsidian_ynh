@@ -26,3 +26,9 @@ ynh_backup "/etc/systemd/system/$app.service"
 ynh_backup "/etc/systemd/system/$app-novnc.service"
 ynh_backup "/etc/logrotate.d/$app"
 
+#=================================================
+# END OF SCRIPT
+#=================================================
+
+ynh_print_info "Backup of $app completed"
+
