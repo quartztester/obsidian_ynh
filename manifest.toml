@@ -1,0 +1,78 @@
+#:schema https://raw.githubusercontent.com/YunoHost/apps/main/schemas/manifest.v2.schema.json
+
+packaging_format = 2
+
+id = "obsidian"
+name = "Obsidian"
+description.en = "Markdown note-taking app with linking, plugins and local vaults, delivered in the browser"
+description.fr = "Prise de notes Markdown avec liens, greffons et coffres locaux, accessible dans le navigateur"
+
+version = "1.15.0~ynh1"
+
+maintainers = ["quartztester"]
+
+[upstream]
+license = "proprietary"
+website = "https://obsidian.md/"
+code = "https://github.com/obsidianmd/obsidian-releases"
+cpe = "cpe:2.3:a:obsidian:obsidian"
+
+[integration]
+yunohost = ">= 12.1.17"
+helpers_version = "2.1"
+architectures = ["amd64", "arm64"]
+multi_instance = true
+ldap = "not_relevant"
+sso = "not_relevant"
+disk = "600M"
+ram.build = "100M"
+ram.runtime = "800M"
+
+[install]
+    [install.domain]
+    type = "domain"
+
+    [install.init_main_permission]
+    type = "group"
+    default = "admins"
+
+    [install.gpu]
+    ask.en = "GPU acceleration"
+    ask.fr = "Accélération GPU"
+    help.en = "Vendor of the GPU to expose to Obsidian. Needs the matching driver on the server; pick none to render in software."
+    help.fr = "Constructeur du GPU à exposer à Obsidian. Nécessite le pilote correspondant sur le serveur ; choisissez none pour un rendu logiciel."
+    type = "select"
+    choices = ["none", "intel", "amd", "nvidia"]
+    default = "none"
+
+[resources]
+    [resources.sources.main]
+    amd64.url = "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.15.0/obsidian-1.15.0.tar.gz"
+    amd64.sha256 = "75594ae09914ca0191dde13c0697dee653322287a3a806c15519332d9ada14d3"
+    arm64.url = "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.15.0/obsidian-1.15.0-arm64.tar.gz"
+    arm64.sha256 = "7e1bdd82fc65dcc3c03de5b8a85a8d79258f94642ba27987c2d1188b9763e903"
+    autoupdate.strategy = "latest_github_release"
+    autoupdate.asset.amd64 = '^obsidian-[0-9.]+\.tar\.gz$'
+    autoupdate.asset.arm64 = '^obsidian-[0-9.]+-arm64\.tar\.gz$'
+
+    [resources.system_user]
+
+    [resources.install_dir]
+
+    [resources.data_dir]
+
+    [resources.permissions]
+    main.url = "/"
+
+    [resources.ports]
+    main.default = 3000
+    vnc.default = 5900
+
+    [resources.apt]
+    packages = "libnotify4, libnss3, libxss1, libxtst6, libuuid1, xdg-utils, mesa-va-drivers, tigervnc-standalone-server, novnc, websockify, dbus-x11"
+    # t64 rename: bookworm ships libgtk-3-0, trixie libgtk-3-0t64 (same for atspi/secret)
+    packages_from_raw_bash = """
+    for pkg in libgtk-3-0 libatspi2.0-0 libsecret-1-0; do
+        apt-cache show "${pkg}t64" > /dev/null 2>&1 && echo "${pkg}t64" || echo "$pkg"
+    done
+    """

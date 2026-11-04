@@ -1,0 +1,43 @@
+#:schema https://github.com/YunoHost/apps/raw/main/schemas/config_panel.v1.schema.json
+
+version = "1.0"
+
+[main]
+name.en = "Session"
+name.fr = "Session"
+services = ["__APP__", "__APP__-novnc"]
+
+    [main.display]
+    name.en = "Display"
+    name.fr = "Affichage"
+
+        [main.display.gpu]
+        ask.en = "GPU acceleration"
+        ask.fr = "Accélération GPU"
+        help.en = "Vendor of the GPU exposed to Obsidian. Needs the matching driver on the server; none renders in software."
+        help.fr = "Constructeur du GPU exposé à Obsidian. Nécessite le pilote correspondant sur le serveur ; none effectue un rendu logiciel."
+        type = "select"
+        choices = ["none", "intel", "amd", "nvidia"]
+        bind = "settings"
+
+        [main.display.geometry]
+        ask.en = "Screen resolution"
+        ask.fr = "Résolution de l'écran"
+        help.en = "Size of the virtual desktop streamed to the browser."
+        help.fr = "Taille du bureau virtuel diffusé au navigateur."
+        type = "select"
+        choices = ["1280x800", "1600x900", "1920x1080"]
+        bind = "settings"
+
+    [main.access]
+    name.en = "Access"
+    name.fr = "Accès"
+
+        [main.access.vnc_password]
+        ask.en = "VNC password"
+        ask.fr = "Mot de passe VNC"
+        help.en = "Requested by the browser client after the YunoHost login."
+        help.fr = "Demandé par le client navigateur après la connexion YunoHost."
+        type = "password"
+        redact = true
+        bind = "settings"

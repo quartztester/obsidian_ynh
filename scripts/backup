@@ -1,0 +1,33 @@
+#!/bin/bash
+
+#=================================================
+# IMPORT GENERIC HELPERS
+#=================================================
+
+# Keep this path for calling _common.sh inside the execution's context of backup and restore scripts
+source ../settings/scripts/_common.sh
+source /usr/share/yunohost/helpers
+
+#=================================================
+# BACKUP THE APP MAIN DIR
+#=================================================
+
+ynh_script_progression "Backing up $app's files..."
+
+ynh_backup "$install_dir"
+ynh_backup "$data_dir"
+
+#=================================================
+# BACKUP SYSTEM CONFIGURATION
+#=================================================
+
+ynh_backup "/etc/nginx/conf.d/$domain.d/$app.conf"
+ynh_backup "/etc/systemd/system/$app.service"
+ynh_backup "/etc/systemd/system/$app-novnc.service"
+ynh_backup "/etc/logrotate.d/$app"
+
+#=================================================
+# END OF SCRIPT
+#=================================================
+
+ynh_script_progression "Backup of $app completed"

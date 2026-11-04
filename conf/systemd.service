@@ -1,0 +1,39 @@
+[Unit]
+Description=Obsidian desktop session for __APP__
+After=network.target
+
+[Service]
+Type=simple
+User=__APP__
+Group=__APP__
+WorkingDirectory=__INSTALL_DIR__
+Environment=HOME=__DATA_DIR__
+ExecStart=__INSTALL_DIR__/session.sh
+StandardOutput=append:/var/log/__APP__/__APP__.log
+StandardError=inherit
+Restart=on-failure
+RestartSec=5
+
+# GPU nodes stay visible: PrivateDevices=yes hides /dev/dri and /dev/nvidia*
+PrivateDevices=no
+DeviceAllow=/dev/dri rw
+DeviceAllow=/dev/nvidia0 rw
+DeviceAllow=/dev/nvidiactl rw
+DeviceAllow=/dev/nvidia-modeset rw
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+RestrictRealtime=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+ProtectSystem=full
+ProtectControlGroups=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

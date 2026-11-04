@@ -1,0 +1,28 @@
+#!/bin/bash
+
+#=================================================
+# IMPORT GENERIC HELPERS
+#=================================================
+
+source /usr/share/yunohost/helpers
+source _common.sh
+
+ynh_abort_if_errors
+
+#=================================================
+# APPLY OVERRIDE: PANEL VALUES RE-RENDER THE SESSION ENV
+#=================================================
+
+ynh_app_config_apply() {
+    _ynh_app_config_apply
+
+    gpu=$(ynh_app_setting_get --key=gpu)
+    geometry=$(ynh_app_setting_get --key=geometry)
+    vnc_password=$(ynh_app_setting_get --key=vnc_password)
+
+    _obsidian_check_gpu
+    _obsidian_deploy_session
+}
+
+#=================================================
+ynh_app_config_run "$1"
