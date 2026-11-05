@@ -13,6 +13,7 @@ maintainers = ["quartztester"]
 
 [upstream]
 license = "LicenseRef-Proprietary"
+license_url = "https://obsidian.md/license"
 website = "https://obsidian.md"
 admindoc = "https://help.obsidian.md"
 userdoc = "https://help.obsidian.md"
