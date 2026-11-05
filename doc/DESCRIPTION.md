@@ -1,5 +1,6 @@
-Obsidian is a Markdown note-taking app: notes stay plain files in a vault you own,
-linked with `[[wiki links]]` and extended by community plugins and themes.
+Browser access to the Obsidian note-taking app, streamed from your server.
 
-This package runs the desktop app on the server and streams it to the browser, so
-the vault is reachable from any device without installing Obsidian locally.
+- Markdown vault with links, graph view, search and canvas
+- Community plugins and themes
+- Notes stored on the server and readable over SFTP
+- Single desktop session shared by every user allowed on the app

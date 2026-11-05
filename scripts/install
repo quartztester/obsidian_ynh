@@ -8,50 +8,49 @@ source _common.sh
 source /usr/share/yunohost/helpers
 
 #=================================================
-# INITIALIZE AND STORE SETTINGS
-#=================================================
-
-ynh_app_setting_set_default --key=vnc_password --value="$(ynh_string_random --length=16)"
-ynh_app_setting_set_default --key=geometry --value="1280x800"
-
-_obsidian_check_gpu
-
-#=================================================
 # DOWNLOAD, CHECK AND UNPACK SOURCE
 #=================================================
-
 ynh_script_progression "Setting up source files..."
 
-ynh_setup_source --dest_dir="$install_dir"
+ynh_obsidian_deploy
+ynh_obsidian_install_selkies
 
-_obsidian_deploy_session
+#=================================================
+# PREPARE THE VAULT
+#=================================================
+ynh_script_progression "Preparing the vault..."
+
+ynh_obsidian_prepare_vault
 
 #=================================================
 # SYSTEM CONFIGURATION
 #=================================================
-
 ynh_script_progression "Adding system configurations related to $app..."
 
 ynh_config_add_nginx
 
 ynh_config_add_systemd
-ynh_config_add_systemd --service="$app-novnc" --template="novnc.service"
 
 yunohost service add "$app" --description="Obsidian desktop session" --log="/var/log/$app/$app.log"
-yunohost service add "$app-novnc" --description="noVNC web bridge for Obsidian" --log="/var/log/$app/$app.log"
-
-ynh_config_add_logrotate
 
 #=================================================
 # START SYSTEMD SERVICE
 #=================================================
+ynh_script_progression "Starting $app's systemd service..."
 
-ynh_script_progression "Starting $app's services..."
+ynh_systemctl --service="$app" --action="start"
 
-ynh_systemctl --service="$app" --action=start
-ynh_systemctl --service="$app-novnc" --action=start
-
-_obsidian_wait_web
+# The very first launch resets the vault registry: seed it once the profile exists, then restart.
+for _ in $(seq 60); do
+    [ -f "$data_dir/.config/obsidian/Local State" ] && break
+    sleep 0.5
+done
+sleep 3
+vault_id=$(ynh_string_random --length=16 --filter=0-9a-f)
+echo "{\"vaults\":{\"$vault_id\":{\"path\":\"$data_dir/vault\",\"ts\":$(date +%s)000,\"open\":true}}}" \
+    > "$data_dir/.config/obsidian/obsidian.json"
+chown "$app:$app" "$data_dir/.config/obsidian/obsidian.json"
+ynh_systemctl --service="$app" --action="restart"
 
 #=================================================
 # END OF SCRIPT

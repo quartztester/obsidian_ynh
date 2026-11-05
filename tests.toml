@@ -3,3 +3,6 @@
 test_format = 1.0
 
 [default]
+
+# The first release streamed through noVNC on a second unit; that path must keep working.
+test_upgrade_from.73e902b.name = "v1.15.0-ynh1 (noVNC)"

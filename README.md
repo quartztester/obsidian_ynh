@@ -8,18 +8,21 @@
 > linked with `[[wiki links]]` and extended by community plugins and themes.
 
 This package runs the Obsidian desktop app on the server and streams the session
-to the browser through noVNC, so the vault is reachable from any device.
+into your browser, so the vault is reachable from any device without installing
+Obsidian on it.
 
 ## Features
 
-- Notes as plain Markdown files, kept in `/home/yunohost.app/obsidian/`
+- Notes as plain Markdown files, kept in `/home/yunohost.app/obsidian/vault`
 - Wiki links, graph view, community plugins and themes
-- Browser access behind the YunoHost portal, with a VNC password as a second lock
-- Optional GPU acceleration for Intel, AMD and NVIDIA servers
+- Browser session behind the YunoHost portal — no separate password to manage
+- Clipboard sync both ways, and drag-and-drop uploads into the vault
+- Desktop size follows your browser window; the configured size is the starting point
+- Hardware video encoding when the server exposes a GPU
 
 ## Screenshots
 
-![Obsidian running in the browser](./doc/screenshots/desktop.png)
+![Obsidian running in the browser](./doc/screenshots/obsidian.png)
 
 ## Installation
 
@@ -27,8 +30,9 @@ to the browser through noVNC, so the vault is reachable from any device.
 yunohost app install obsidian
 ```
 
-The install form asks for the domain and, optionally, which GPU vendor to expose.
-Pick `none` to render in software.
+The install form asks for the domain, an optional subpath, the starting desktop
+size and who may reach it. A vault is personal data — restrict the permission to
+a group if the notes are not for every account on the server.
 
 ## Documentation
 

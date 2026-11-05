@@ -10,21 +10,20 @@ source /usr/share/yunohost/helpers
 #=================================================
 # REMOVE SYSTEM CONFIGURATION
 #=================================================
-
 ynh_script_progression "Removing system configurations related to $app..."
 
-ynh_config_remove_logrotate
-
-for service in "$app" "$app-novnc"; do
-    if ynh_hide_warnings yunohost service status "$service" > /dev/null; then
-        yunohost service remove "$service"
-    fi
-done
-
-ynh_config_remove_systemd "$app-novnc"
-ynh_config_remove_systemd
-
 ynh_config_remove_nginx
+ynh_obsidian_remove_uploads
+
+# The streaming server is a system package this app installed.
+if dpkg-query -W -f='${Status}' selkies 2>/dev/null | grep -q 'ok installed'; then
+    DEBIAN_FRONTEND=noninteractive apt-get purge --yes selkies
+fi
+
+if ynh_hide_warnings yunohost service status "$app" >/dev/null; then
+    yunohost service remove "$app"
+fi
+ynh_config_remove_systemd
 
 #=================================================
 # END OF SCRIPT

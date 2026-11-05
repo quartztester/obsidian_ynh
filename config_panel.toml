@@ -5,39 +5,18 @@ version = "1.0"
 [main]
 name.en = "Session"
 name.fr = "Session"
-services = ["__APP__", "__APP__-novnc"]
+services = ["__APP__"]
 
     [main.display]
     name.en = "Display"
     name.fr = "Affichage"
 
-        [main.display.gpu]
-        ask.en = "GPU acceleration"
-        ask.fr = "Accélération GPU"
-        help.en = "Vendor of the GPU exposed to Obsidian. Needs the matching driver on the server; none renders in software."
-        help.fr = "Constructeur du GPU exposé à Obsidian. Nécessite le pilote correspondant sur le serveur ; none effectue un rendu logiciel."
-        type = "select"
-        choices = ["none", "intel", "amd", "nvidia"]
+        [main.display.resolution]
+        ask.en = "Desktop size"
+        ask.fr = "Taille du bureau"
+        help.en = "Starting size of the streamed desktop, as WIDTHxHEIGHT. The stream then adapts to your browser window."
+        help.fr = "Taille de départ du bureau diffusé, au format LARGEURxHAUTEUR. Le flux s'adapte ensuite à la fenêtre du navigateur."
+        type = "string"
         bind = "settings"
-
-        [main.display.geometry]
-        ask.en = "Screen resolution"
-        ask.fr = "Résolution de l'écran"
-        help.en = "Size of the virtual desktop streamed to the browser."
-        help.fr = "Taille du bureau virtuel diffusé au navigateur."
-        type = "select"
-        choices = ["1280x800", "1600x900", "1920x1080"]
-        bind = "settings"
-
-    [main.access]
-    name.en = "Access"
-    name.fr = "Accès"
-
-        [main.access.vnc_password]
-        ask.en = "VNC password"
-        ask.fr = "Mot de passe VNC"
-        help.en = "Requested by the browser client after the YunoHost login."
-        help.fr = "Demandé par le client navigateur après la connexion YunoHost."
-        type = "password"
-        redact = true
-        bind = "settings"
+        pattern.regexp = '^[0-9]{3,4}x[0-9]{3,4}$'
+        pattern.error = "Expected a size such as 1920x1080"

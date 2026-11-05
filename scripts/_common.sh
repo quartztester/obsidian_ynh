@@ -4,51 +4,63 @@
 # COMMON VARIABLES AND CUSTOM HELPERS
 #=================================================
 
-# No --use-gl=egl / --ignore-gpu-blocklist: forcing GL on the virtual X server makes
-# Chromium die with "GPU process isn't usable", which crash-loops the whole session
-_obsidian_gpu_flags() {
-    case "$gpu" in
-        intel | amd) echo "--enable-features=VaapiVideoDecodeLinuxGL,VaapiVideoDecoder" ;;
-        nvidia) echo "--enable-features=VaapiVideoDecodeLinuxGL" ;;
-        *) echo "" ;;
-    esac
-}
+# Debian does not carry the streaming server: pin the upstream .deb, per architecture.
+selkies_version="2.2.0-1~debianbookworm"
+case "$(dpkg --print-architecture)" in
+    amd64) selkies_sha256="e052932442c7d99401c8cac9ad899451c7cf7b172de83ecf2d0bc82f8156aaef" ;;
+    arm64) selkies_sha256="f9f3a531eade2305f4d2d36a5ecb0b3e5a1d1b6f05d0dea5e61b6ce209e2ea65" ;;
+esac
 
-_obsidian_check_gpu() {
-    case "$gpu" in
-        intel | amd)
-            ls /dev/dri/renderD* > /dev/null 2>&1 || ynh_die "No /dev/dri render node: ${gpu} acceleration needs a GPU driver on the host."
-            usermod -aG video,render "$app"
-            ;;
-        nvidia)
-            [ -e /dev/nvidia0 ] || ynh_die "No /dev/nvidia0: nvidia acceleration needs the proprietary NVIDIA driver on the host."
-            usermod -aG video "$app"
-            ;;
-    esac
-}
+ynh_obsidian_deploy() {
+    # Settings added after the first release are missing when upgrading or restoring,
+    # and the core leaves their variable empty during an upgrade: read it from the
+    # settings and export it so the launcher template renders.
+    resolution=$(ynh_app_setting_get --key=resolution || true)
+    if ! [[ "$resolution" =~ ^[0-9]{3,4}x[0-9]{3,4}$ ]]; then
+        resolution=1920x1080
+        ynh_app_setting_set --key=resolution --value="$resolution"
+    fi
+    export resolution
 
-_obsidian_deploy_session() {
-    local electron_flags
-    electron_flags="$(_obsidian_gpu_flags)"
-
+    ynh_setup_source --dest_dir="$install_dir" "$@"
+    # systemd's append: log target needs the directory to exist.
     mkdir -p "/var/log/$app"
     chown "$app:$app" "/var/log/$app"
-
-    ynh_config_add --template="env" --destination="$install_dir/env"
-    ynh_config_add --template="session.sh" --destination="$install_dir/session.sh"
-    chmod 750 "$install_dir/session.sh"
-    chown "$app:$app" "$install_dir/env"
-
-    # Xvnc only reads vncpasswd's obfuscated form, never the plain password
-    echo "$vnc_password" | vncpasswd -f > "$data_dir/.vncpasswd"
-    chmod 600 "$data_dir/.vncpasswd"
-    chown "$app:$app" "$data_dir/.vncpasswd"
+    ynh_config_add --template="start.sh" --destination="$install_dir/start.sh"
+    chmod 755 "$install_dir/start.sh" "$install_dir/obsidian"
+    chown -R "$app:$app" "$install_dir"
 }
 
-_obsidian_wait_web() {
-    for _ in $(seq 1 30); do
-        curl -fsS "http://127.0.0.1:$port/vnc.html" > /dev/null 2>&1 && return 0
-        sleep 1
-    done
-    ynh_die "noVNC did not answer on port $port"
+# The .deb carries its own Python, screen capture and web client, so a version check is enough.
+ynh_obsidian_install_selkies() {
+    local installed deb
+    installed=$(dpkg-query -W -f='${Version}' selkies 2>/dev/null || true)
+    if [ "$installed" = "$selkies_version" ]; then
+        return
+    fi
+
+    deb="/var/cache/$app/selkies.deb"
+    mkdir -p "$(dirname "$deb")"
+    curl -fsSL -o "$deb" \
+        "https://github.com/selkies-project/selkies/releases/download/2.2.0/selkies-2.2.0-debianbookworm-$(dpkg --print-architecture).deb"
+    if ! echo "$selkies_sha256  $deb" | sha256sum --check --status; then
+        rm -f "$deb"
+        echo "The Selkies download does not match the pinned checksum" >&2
+        exit 1
+    fi
+    DEBIAN_FRONTEND=noninteractive apt-get install --yes "$deb"
+    rm -f "$deb"
+}
+
+ynh_obsidian_prepare_vault() {
+    install -d -o "$app" -g "$app" -m 755 "$data_dir/vault"
+    # Drag-and-drop uploads land here, written by the app user: nginx no longer touches the vault.
+    install -d -o "$app" -g "$app" -m 755 "$data_dir/vault/attachments"
+}
+
+# Before Selkies the browser wrote dropped files through nginx, which needed www-data in the app group.
+ynh_obsidian_remove_uploads() {
+    if id -nG www-data | tr ' ' '\n' | grep -qxF "$app"; then
+        gpasswd -d www-data "$app"
+    fi
 }

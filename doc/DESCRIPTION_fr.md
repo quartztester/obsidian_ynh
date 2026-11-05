@@ -1,7 +1,6 @@
-Obsidian est une application de prise de notes Markdown : les notes restent des
-fichiers simples dans un coffre qui vous appartient, reliées par des `[[liens wiki]]`
-et enrichies par des greffons et des thèmes communautaires.
+Accès navigateur à l'application de prise de notes Obsidian, diffusée depuis votre serveur.
 
-Ce paquet exécute l'application de bureau sur le serveur et la diffuse dans le
-navigateur : le coffre est accessible depuis n'importe quel appareil sans installer
-Obsidian localement.
+- Coffre Markdown avec liens, vue graphe, recherche et canvas
+- Greffons et thèmes communautaires
+- Notes stockées sur le serveur et lisibles en SFTP
+- Session de bureau unique partagée par tous les utilisateurs autorisés

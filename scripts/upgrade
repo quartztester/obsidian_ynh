@@ -8,62 +8,39 @@ source _common.sh
 source /usr/share/yunohost/helpers
 
 #=================================================
-# STOP SYSTEMD SERVICE
+# RETIRE THE noVNC UNIT OF THE 1.x PACKAGE
 #=================================================
 
-ynh_script_progression "Stopping $app's services..."
-
-ynh_systemctl --service="$app-novnc" --action=stop
-ynh_systemctl --service="$app" --action=stop
-
-#=================================================
-# ENSURE DOWNWARD COMPATIBILITY
-#=================================================
-
-ynh_script_progression "Ensuring downward compatibility..."
-
-ynh_app_setting_set_default --key=vnc_password --value="$(ynh_string_random --length=16)"
-ynh_app_setting_set_default --key=geometry --value="1280x800"
-ynh_app_setting_set_default --key=gpu --value="none"
-
-_obsidian_check_gpu
+# ynh1 streamed through websockify on a second unit; selkies serves the stream on the app port.
+if [ -e "/etc/systemd/system/$app-novnc.service" ]; then
+    ynh_systemctl --service="$app-novnc" --action=stop
+    ynh_hide_warnings yunohost service remove "$app-novnc"
+    ynh_config_remove_systemd "$app-novnc"
+fi
 
 #=================================================
 # DOWNLOAD, CHECK AND UNPACK SOURCE
 #=================================================
-
 ynh_script_progression "Upgrading source files..."
 
-ynh_setup_source --dest_dir="$install_dir" --full_replace --keep="env session.sh"
+ynh_obsidian_deploy --full_replace
 
-_obsidian_deploy_session
+ynh_obsidian_install_selkies
+ynh_obsidian_remove_uploads
+ynh_obsidian_prepare_vault
 
 #=================================================
 # REAPPLY SYSTEM CONFIGURATION
 #=================================================
-
 ynh_script_progression "Upgrading system configurations related to $app..."
 
 ynh_config_add_nginx
 
 ynh_config_add_systemd
-ynh_config_add_systemd --service="$app-novnc" --template="novnc.service"
 
 yunohost service add "$app" --description="Obsidian desktop session" --log="/var/log/$app/$app.log"
-yunohost service add "$app-novnc" --description="noVNC web bridge for Obsidian" --log="/var/log/$app/$app.log"
 
-ynh_config_add_logrotate
-
-#=================================================
-# START SYSTEMD SERVICE
-#=================================================
-
-ynh_script_progression "Starting $app's services..."
-
-ynh_systemctl --service="$app" --action=start
-ynh_systemctl --service="$app-novnc" --action=start
-
-_obsidian_wait_web
+ynh_systemctl --service="$app" --action="restart"
 
 #=================================================
 # END OF SCRIPT

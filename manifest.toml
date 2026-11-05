@@ -4,16 +4,18 @@ packaging_format = 2
 
 id = "obsidian"
 name = "Obsidian"
-description.en = "Markdown note-taking app with linking, plugins and local vaults, delivered in the browser"
-description.fr = "Prise de notes Markdown avec liens, greffons et coffres locaux, accessible dans le navigateur"
+description.en = "Markdown note-taking app with linked notes, plugins and a vault kept on the server"
+description.fr = "Application de prise de notes Markdown avec notes liées, greffons et coffre gardé sur le serveur"
 
-version = "1.15.0~ynh1"
+version = "1.15.0~ynh3"
 
 maintainers = ["quartztester"]
 
 [upstream]
-license = "proprietary"
-website = "https://obsidian.md/"
+license = "LicenseRef-Proprietary"
+website = "https://obsidian.md"
+admindoc = "https://help.obsidian.md"
+userdoc = "https://help.obsidian.md"
 code = "https://github.com/obsidianmd/obsidian-releases"
 cpe = "cpe:2.3:a:obsidian:obsidian"
 
@@ -22,38 +24,51 @@ yunohost = ">= 12.1.17"
 helpers_version = "2.1"
 architectures = ["amd64", "arm64"]
 multi_instance = true
+
+# The app has its own account model (or none): access is decided by the YunoHost permission.
 ldap = "not_relevant"
 sso = "not_relevant"
-disk = "600M"
-ram.build = "100M"
+
+disk = "700M"
+ram.build = "50M"
 ram.runtime = "800M"
 
 [install]
     [install.domain]
     type = "domain"
 
+    [install.path]
+    type = "path"
+    default = "/obsidian"
+
     [install.init_main_permission]
     type = "group"
-    default = "admins"
+    # Every account of the server by default; a vault is personal data, so restrict it to a group when it is not.
+    default = "all_users"
 
-    [install.gpu]
-    ask.en = "GPU acceleration"
-    ask.fr = "Accélération GPU"
-    help.en = "Vendor of the GPU to expose to Obsidian. Needs the matching driver on the server; pick none to render in software."
-    help.fr = "Constructeur du GPU à exposer à Obsidian. Nécessite le pilote correspondant sur le serveur ; choisissez none pour un rendu logiciel."
-    type = "select"
-    choices = ["none", "intel", "amd", "nvidia"]
-    default = "none"
+    [install.resolution]
+    ask.en = "Desktop size"
+    ask.fr = "Taille du bureau"
+    help.en = "Starting size of the streamed desktop. The stream adapts to your browser window afterwards, so this is only what it shows before you connect."
+    help.fr = "Taille de départ du bureau diffusé. Le flux s'adapte ensuite à la fenêtre du navigateur : ce n'est que la taille affichée avant votre connexion."
+    type = "string"
+    default = "1920x1080"
+    pattern.regexp = '^[0-9]{3,4}x[0-9]{3,4}$'
+    pattern.error = "Expected a size such as 1920x1080"
 
 [resources]
     [resources.sources.main]
+    format = "tar.gz"
+
     amd64.url = "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.15.0/obsidian-1.15.0.tar.gz"
     amd64.sha256 = "75594ae09914ca0191dde13c0697dee653322287a3a806c15519332d9ada14d3"
+
     arm64.url = "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.15.0/obsidian-1.15.0-arm64.tar.gz"
     arm64.sha256 = "7e1bdd82fc65dcc3c03de5b8a85a8d79258f94642ba27987c2d1188b9763e903"
+
     autoupdate.strategy = "latest_github_release"
-    autoupdate.asset.amd64 = '^obsidian-[0-9.]+\.tar\.gz$'
-    autoupdate.asset.arm64 = '^obsidian-[0-9.]+-arm64\.tar\.gz$'
+    autoupdate.asset.amd64 = "^obsidian-[0-9.]+.tar.gz$"
+    autoupdate.asset.arm64 = "^obsidian-[0-9.]+-arm64.tar.gz$"
 
     [resources.system_user]
 
@@ -65,14 +80,11 @@ ram.runtime = "800M"
     main.url = "/"
 
     [resources.ports]
-    main.default = 3000
-    vnc.default = 5900
+    # One port: Selkies serves the client and the stream on it.
+    main.default = 8090
 
     [resources.apt]
-    packages = "libnotify4, libnss3, libxss1, libxtst6, libuuid1, xdg-utils, mesa-va-drivers, tigervnc-standalone-server, novnc, websockify, dbus-x11"
-    # t64 rename: bookworm ships libgtk-3-0, trixie libgtk-3-0t64 (same for atspi/secret)
-    packages_from_raw_bash = """
-    for pkg in libgtk-3-0 libatspi2.0-0 libsecret-1-0; do
-        apt-cache show "${pkg}t64" > /dev/null 2>&1 && echo "${pkg}t64" || echo "$pkg"
-    done
-    """
+    # Electron runtime + the X11 stack. The streaming server is Selkies, pinned in
+    # scripts/_common.sh because Debian does not carry it. The t64 packages on trixie
+    # provide these bookworm names, so one list covers both supported distributions.
+    packages = "xvfb, x11-utils, openbox, libva2, intel-media-va-driver, libgtk-3-0, libnss3, libatk-bridge2.0-0, libasound2, libgbm1, libxss1, libx11-xcb1, libxcb-dri3-0, libxcomposite1, libxdamage1, libxrandr2, libdrm2, libcups2, libpango-1.0-0, libcairo2, fonts-dejavu-core, tint2"
